@@ -1,0 +1,588 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>心智圖製作工具</title>
+  
+  <!-- [可選] 直接在此處貼上您的 GAS 網路應用程式 URL -->
+  <script>
+    var hardcodedGasUrl = 'https://script.google.com/macros/s/AKfycbxAhqv05KiV1iM9qXnaVcQVF7PqfKzuzuXqCWpn3dNihKxnzSYC3MBkLSDwO4de9foyNA/exec';
+  </script>
+
+  <style>
+    html, body { height:100%; margin:0; padding:0; font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif; overflow:hidden; }
+    
+    /* Hamburger Menu Button */
+    #menu_toggle { position:fixed; top:15px; left:15px; width: 40px; height: 40px; background: #2c3e50; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 200; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid #34495e; }
+    #menu_toggle span, #menu_toggle span:before, #menu_toggle span:after { content: ''; position: absolute; width: 20px; height: 2px; background: #ecf0f1; transition: all 0.3s; }
+    #menu_toggle span:before { transform: translateY(-6px); }
+    #menu_toggle span:after { transform: translateY(6px); }
+    #menu_toggle.active span { background: transparent; }
+    #menu_toggle.active span:before { transform: rotate(45deg); }
+    #menu_toggle.active span:after { transform: rotate(-45deg); }
+
+    /* Top Slide-down Menu */
+    #top_menu { position: fixed; top: -150px; left: 0; right: 0; background: #34495e; padding: 15px 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 15px; box-shadow: 0 2px 6px rgba(0,0,0,0.3); z-index: 100; transition: top 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+    #top_menu.active { top: 0; }
+    .btn { padding: 8px 16px; border:none; border-radius: 20px; font-size: 14px; color: #fff; cursor: pointer; box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform .1s, box-shadow .1s; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+    .menu-separator { width: 2px; height: 25px; background-color: #4a6572; border-radius: 1px; }
+    #md_input_label { padding: 8px 16px; border-radius: 20px; font-size: 14px; color: #fff; cursor: pointer; background-image: linear-gradient(45deg,#81c784,#388e3c); box-shadow: 0 4px 8px rgba(0,0,0,0.2); transition: transform .1s, box-shadow .1s; }
+    #md_input_label:hover { transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.3); }
+    #md_input { display: none; }
+    #btn_download { background-image: linear-gradient(45deg,#29b6f6,#0288d1); }
+    #btn_export_md { background-image: linear-gradient(45deg,#9575cd,#5e35b1); }
+    #btn_open_cloud { background-image: linear-gradient(45deg, #66bb6a, #388e3c); }
+    #btn_save_cloud { background-image: linear-gradient(45deg,#fdd835,#fbc02d); color: #333;}
+    #btn_settings { background-image: linear-gradient(45deg,#90a4ae,#607d8b); }
+    #btn_help { background-image: linear-gradient(45deg, #7986cb, #3f51b5); }
+
+    /* Floating Action Buttons */
+    #fab_container { position: fixed; top: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 150; }
+    .fab { width: 48px; height: 48px; border-radius: 50%; border: none; color: white; font-size: 24px; line-height: 48px; text-align: center; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: all 0.2s; }
+    .fab:hover { transform: scale(1.1); box-shadow: 0 6px 16px rgba(0,0,0,0.4); }
+    #btn_add_child { background-image: linear-gradient(45deg, #ff8a65, #f4511e); }
+    #btn_add_sibling { background-image: linear-gradient(45deg, #4db6ac, #00897b); }
+    #btn_delete { background-image: linear-gradient(45deg, #f06292, #e91e63); }
+    #btn_add_link { background-image: linear-gradient(45deg, #4dd0e1, #00acc1); }
+    #btn_add_image { background-image: linear-gradient(45deg, #ffab40, #ff6f00); }
+    #btn_toggle_all { background-image: linear-gradient(45deg, #ab47bc, #8e24aa); }
+    #btn_presentation { background-image: linear-gradient(45deg, #5c6bc0, #3f51b5); }
+    #btn_reorder { background-image: linear-gradient(45deg, #546e7a, #37474f); }
+
+    /* Modal Styles */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 1000; }
+    .modal-content { background: #fff; padding: 25px; border-radius: 10px; width: 90%; max-width: 700px; box-shadow: 0 5px 20px rgba(0,0,0,0.4); display: flex; flex-direction: column; max-height: 90vh; }
+    .modal-content h2 { margin-top: 0; color: #333; }
+    .modal-body { overflow-y: auto; }
+    .modal-content .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; flex-shrink: 0; }
+    .modal-buttons .btn { background-image: linear-gradient(45deg, #546e7a, #37474f); } /* Darker Button Style */
+    .modal-input { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; box-sizing: border-box; }
+
+    /* Cloud Files Modal Specific */
+    #cloud_files_list_container { max-height: 60vh; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px; }
+    #cloud_files_list { list-style: none; padding: 0; margin: 0; }
+    #cloud_files_list li { display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; border-bottom: 1px solid #eee; }
+    #cloud_files_list li:last-child { border-bottom: none; }
+    #cloud_files_list .file-info { cursor: pointer; flex-grow: 1; }
+    #cloud_files_list .file-info:hover { background-color: #f5f5f5; margin: -12px -15px; padding: 12px 15px; }
+    #cloud_files_list .file-name { font-weight: bold; color: #333; }
+    #cloud_files_list .file-meta { font-size: 12px; color: #777; margin-top: 4px; }
+    #cloud_files_list .file-meta span { margin-right: 10px; }
+    .btn-delete-cloud { background-image: linear-gradient(45deg, #ef5350, #c62828); padding: 5px 12px; margin-left: 15px; }
+
+    /* Help Modal Specific */
+    #help_modal h3 { border-bottom: 2px solid #3498db; padding-bottom: 5px; margin-top: 25px; }
+    #help_modal p, #help_modal li { line-height: 1.6; color: #333; }
+    #help_modal .code-container { position: relative; margin-top: 15px; }
+    #help_modal pre { background-color: #2d2d2d; color: #f1f1f1; padding: 15px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; max-height: 400px; overflow-y: auto; }
+    #btn_copy_gas_code { position: absolute; top: 10px; right: 10px; background: #7f8c8d; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    #btn_copy_gas_code:hover { background: #95a5a6; }
+    #help_modal .pros-cons { border-left: 4px solid #f1c40f; padding-left: 15px; margin-top: 10px; }
+
+    /* Notification Layer */
+    #notification_layer { position: fixed; top: -100px; left: 50%; transform: translateX(-50%); padding: 12px 25px; border-radius: 20px; color: #fff; font-size: 16px; z-index: 2000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transition: top 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+    #notification_layer.show { top: 20px; }
+    #notification_layer.success { background-color: #2ecc71; }
+    #notification_layer.error { background-color: #e74c3c; }
+
+    /* Mindmap Container */
+    #jsmind_container { position: absolute; top: 0; bottom: 0; left: 0; right: 0; background: #ecf0f1; cursor: grab; overflow: hidden; }
+    .jsmind-inner { overflow:visible!important; transform-origin: 0 0; }
+    #jsmind_container.grabbing { cursor: grabbing; }
+    #attribution { position:absolute; bottom:10px; right:10px; padding:4px 8px; background:rgba(0,0,0,0.5); color:#fff; border-radius:4px; font-size:12px; z-index:10; }
+    #attribution a { color:#ffd54f; text-decoration:none; }
+
+    /* Presentation Mode Styles */
+    .presentation-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #1e3c72, #2a5298); display: none; z-index: 2000; }
+    .presentation-content { width: 100%; height: 100%; display: flex; flex-direction: column; color: white; }
+    .presentation-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 40px; background: rgba(0,0,0,0.2); }
+    .presentation-breadcrumb { font-size: 14px; opacity: 0.7; }
+    .presentation-controls { display: flex; align-items: center; gap: 15px; }
+    .presentation-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background 0.2s; }
+    .presentation-btn:hover { background: rgba(255,255,255,0.3); }
+    .presentation-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .slide-counter { font-size: 14px; min-width: 60px; text-align: center; }
+    .presentation-main { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px; text-align: center; position: relative; }
+    .presentation-breadcrumb-corner { position: absolute; top: 30px; left: 30px; font-size: 16px; opacity: 0.5; line-height: 1.4; max-width: 300px; }
+    .presentation-title { font-size: 8em; font-weight: bold; line-height: 1.1; text-shadow: 3px 3px 6px rgba(0,0,0,0.4); max-width: 90%; word-wrap: break-word; transition: opacity 1.2s ease-in-out; opacity: 1; }
+    .presentation-title.active { opacity: 1; }
+    .presentation-title.fade-out { opacity: 0 !important; }
+    .presentation-title.fade-in { opacity: 0 !important; }
+    .presentation-children { display: none; }
+    .presentation-child { display: none; }
+    .presentation-child:hover { display: none; }
+    .presentation-child.selected { display: none; }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jsmind@0.6.1/style/jsmind.css">
+  <script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.1/js/jsmind.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsmind@0.6.1/js/jsmind.draggable-node.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+  <div id="menu_toggle"><span></span></div>
+
+  <div id="top_menu">
+    <!-- Cloud Group -->
+    <button id="btn_save_cloud" class="btn">雲端存檔</button>
+    <button id="btn_open_cloud" class="btn">開啟雲端檔案</button>
+    <div class="menu-separator"></div>
+    <!-- Local File Group -->
+    <button id="btn_open_md_import" class="btn" style="background-image: linear-gradient(45deg,#81c784,#388e3c);">匯入 MD</button>
+    <button id="btn_download" class="btn">下載 HTML</button>
+    <button id="btn_export_md" class="btn">匯出 MD</button>
+    <div class="menu-separator"></div>
+    <!-- App/Meta Group -->
+    <button id="btn_settings" class="btn">設定</button>
+    <button id="btn_help" class="btn">說明</button>
+  </div>
+
+  <div id="fab_container">
+    <button id="btn_add_child" class="fab" title="新增子節點">+</button>
+    <button id="btn_add_sibling" class="fab" title="新增同階節點">~</button>
+    <button id="btn_delete" class="fab" title="刪除節點">-</button>
+    <button id="btn_add_link" class="fab" title="新增/編輯超連結">🔗</button>
+    <button id="btn_add_image" class="fab" title="新增/編輯圖片">🖼️</button>
+    <button id="btn_reorder" class="fab" title="左右排列">↔</button>
+    <button id="btn_toggle_all" class="fab" title="展開/收合所有節點">⚡</button>
+    <button id="btn_presentation" class="fab" title="簡報模式">📺</button>
+  </div>
+
+  <div id="jsmind_container"></div>
+  <div id="attribution">Made by <a href="https://kentxchang.blogspot.tw" target="_blank" rel="noopener">阿剛老師</a></div>
+  <div id="notification_layer"></div>
+
+  <!-- Presentation Mode -->
+  <div id="presentation_overlay" class="presentation-overlay">
+    <div class="presentation-content">
+      <div class="presentation-header">
+        <div class="presentation-breadcrumb"></div>
+        <div class="presentation-controls">
+          <button class="presentation-btn" id="btn_prev_slide">◀</button>
+          <span class="slide-counter"></span>
+          <button class="presentation-btn" id="btn_next_slide">▶</button>
+          <button class="presentation-btn" id="btn_exit_presentation">✕</button>
+        </div>
+      </div>
+      <div class="presentation-main">
+        <div class="presentation-breadcrumb-corner"></div>
+        <div class="presentation-title"></div>
+        <div class="presentation-children"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals -->
+  <div id="md_import_modal_overlay" class="modal-overlay">
+    <div class="modal-content">
+        <h2>匯入 Markdown</h2>
+        <div class="modal-body">
+            <p>請選擇一個 .md 或 .txt 檔案上傳：</p>
+            <input type="file" id="md_file_input" accept=".md,.txt" class="modal-input">
+            <p style="text-align: center; margin: 15px 0;">或</p>
+            <p>直接貼上 Markdown 文字到下方：</p>
+            <textarea id="md_text_input" class="modal-input" rows="10" placeholder="# 根節點..."></textarea>
+        </div>
+        <div class="modal-buttons" style="display: flex; justify-content: space-between; align-items: center;">
+            <button id="btn_show_prompt" class="btn" style="background-image: linear-gradient(45deg,#64b5f6,#2196f3);">參考 Prompt</button>
+            <div>
+                <button id="btn_cancel_md_import" class="btn">取消</button>
+                <button id="btn_process_md_import" class="btn">開始匯入</button>
+            </div>
+        </div>
+    </div>
+  </div>
+
+  <div id="settings_modal_overlay" class="modal-overlay">
+      <div class="modal-content">
+          <h2>雲端儲存設定</h2>
+          <p>請貼上您從 Google Apps Script 取得的網路應用程式 URL。</p>
+          <input type="text" id="gas_url_input" class="modal-input">
+          <div class="modal-buttons">
+              <button id="btn_cancel_settings" class="btn">取消</button>
+              <button id="btn_save_settings" class="btn">儲存</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="cloud_files_modal_overlay" class="modal-overlay">
+      <div class="modal-content">
+          <h2>開啟雲端檔案</h2>
+          <div id="cloud_filter_bar" style="display: flex; gap: 15px; margin-bottom: 15px; align-items: center;">
+            <select id="uploader_filter" class="modal-input" style="flex-basis: 200px;"></select>
+            <input type="text" id="keyword_filter" class="modal-input" placeholder="依關鍵字搜尋..." style="flex-grow: 1;">
+          </div>
+          <div id="cloud_files_list_container" class="modal-body"><ul id="cloud_files_list"></ul></div>
+          <div class="modal-buttons">
+              <button id="btn_close_cloud_files" class="btn">關閉</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="uploader_modal_overlay" class="modal-overlay">
+      <div class="modal-content">
+          <h2>上傳者資訊</h2>
+          <p>請輸入您的名稱或代號 (選填)</p>
+          <input type="text" id="uploader_name_input" class="modal-input">
+          <div class="modal-buttons">
+              <button id="btn_cancel_uploader" class="btn">取消</button>
+              <button id="btn_confirm_uploader" class="btn">確認並儲存</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="help_modal_overlay" class="modal-overlay">
+      <div id="help_modal" class="modal-content">
+          <h2>雲端同步設定說明</h2>
+          <div class="modal-body">
+              <h3>兩種 URL 設定方式比較</h3>
+              <p>您可以選擇以下兩種方式來設定您的 Google Apps Script (GAS) 網址：</p>
+              <div class="pros-cons">
+                  <p><strong>方法一：直接寫入 HTML (推薦)</strong></p>
+                  <p><strong>優點：</strong>最簡單、一勞永逸。只要修改 HTML 檔，所有使用者都能直接使用，無需額外設定。</p>
+                  <p><strong>缺點：</strong>每次更新 GAS 網址時，都需要重新修改並分發 HTML 檔案。</p>
+              </div>
+              <div class="pros-cons" style="border-color: #3498db; margin-top: 15px;">
+                  <p><strong>方法二：使用「設定」介面</strong></p>
+                  <p><strong>優點：</strong>靈活，使用者可以在不修改程式碼的情況下，自行更換 GAS 網址。</p>
+                  <p><strong>缺點：</strong>每個使用者都需要手動設定一次。網址儲存在瀏覽器的 Local Storage 中，若清除瀏覽器資料或更換電腦，就需要重新設定。</p>
+              </div>
+
+              <h3>步驟一：取得 GAS 程式碼</h3>
+              <p>下方的區塊是您需要用到的完整 GAS 程式碼。請點擊右上角的按鈕將其複製。</p>
+              <div class="code-container">
+                  <button id="btn_copy_gas_code">複製 GAS 程式碼</button>
+                  <pre><code id="gas_code_block">/**
+ * @OnlyCurrentDoc
+ * 心智圖資料雲端儲存 Google Apps Script (ES5 相容版)
+ * 作者: 阿剛老師 (修改 by Gemini)
+ * 功能: 接收來自心智圖工具的資料，並存儲/讀取/刪除在綁定的 Google 試算表中。
+ */
+
+// --- 常數設定 ---
+var SHEET_LIST_NAME = '心智圖列表';
+var SHEET_DATA_NAME = '心智圖資料';
+var LIST_HEADERS = ['心智圖名稱', '上傳者', '更新時間', '資料ID'];
+var DATA_HEADERS = ['資料ID', '心智圖內容 (JSON)'];
+
+/**
+ * 當此 Script 作為 Web App 接收到 GET 請求時執行
+ */
+function doGet(e) {
+  try {
+    var action = e.parameter.action;
+    var ss = setupSheets();
+    var listSheet = ss.listSheet;
+    var dataSheet = ss.dataSheet;
+
+    if (action === 'getList') {
+      var listData = listSheet.getDataRange().getValues();
+      listData.shift(); // 移除標頭
+      var result = [];
+      for (var i = 0; i < listData.length; i++) {
+        result.push({
+          name: listData[i][0],
+          uploader: listData[i][1],
+          updateTime: listData[i][2],
+          id: listData[i][3]
+        });
+      }
+      return createJsonResponse({ status: 'success', data: result.reverse() });
+
+    } else if (action === 'getMap' && e.parameter.id) {
+      var dataId = e.parameter.id;
+      var dataSheetData = dataSheet.getDataRange().getValues();
+      dataSheetData.shift(); // 移除標頭
+      var foundRow = null;
+      for (var j = 0; j < dataSheetData.length; j++) {
+        if (dataSheetData[j][0] === dataId) {
+          foundRow = dataSheetData[j];
+          break;
+        }
+      }
+      if (foundRow) {
+        return createJsonResponse({ status: 'success', data: foundRow[1] });
+      } else {
+        throw new Error('找不到對應的資料ID: ' + dataId);
+      }
+
+    } else {
+      throw new Error('無效的操作或缺少參數 (action=getList 或 action=getMap&id=...)');
+    }
+
+  } catch (error) {
+    return createJsonResponse({ status: 'error', message: error.message });
+  }
+}
+
+/**
+ * 當此 Script 作為 Web App 接收到 POST 請求時執行
+ */
+function doPost(e) {
+  try {
+    var ss = setupSheets();
+    var listSheet = ss.listSheet;
+    var dataSheet = ss.dataSheet;
+
+    if (!e || !e.postData || !e.postData.contents) {
+      throw new Error('無效的請求資料。');
+    }
+    var postData = JSON.parse(e.postData.contents);
+    var action = postData.action || 'save'; // 預設 action 為 'save'
+
+    if (action === 'save') {
+      return handleSave(postData, listSheet, dataSheet);
+    } else if (action === 'deleteMap') {
+      return handleDelete(postData, listSheet, dataSheet);
+    } else {
+      throw new Error('無效的 POST 操作。');
+    }
+
+  } catch (error) {
+    return createJsonResponse({ status: 'error', message: error.message, stack: error.stack });
+  }
+}
+
+/**
+ * 處理儲存心智圖的邏輯
+ */
+function handleSave(postData, listSheet, dataSheet) {
+  var mindMapName = postData.name;
+  var mindMapContent = postData.content;
+  var uploader = postData.uploader || '';
+
+  if (!mindMapName || !mindMapContent) {
+    throw new Error('傳入的資料格式不正確，缺少 \'name\' 或 \'content\'.');
+  }
+
+  var listData = listSheet.getDataRange().getValues();
+  var nameExists = false;
+  for (var i = 1; i < listData.length; i++) {
+    if (listData[i][0] === mindMapName) {
+      nameExists = true;
+      break;
+    }
+  }
+
+  var now = new Date();
+
+  if (nameExists) {
+    // If name exists, append timestamp to make it unique
+    var timestamp = Utilities.formatDate(now, Session.getScriptTimeZone(), " (yyyy-MM-dd HH:mm:ss)");
+    mindMapName += timestamp;
+  }
+
+  // Always create a new entry
+  var dataId = generateUUID();
+  listSheet.appendRow([mindMapName, uploader, now, dataId]);
+  dataSheet.appendRow([dataId, mindMapContent]);
+  return createJsonResponse({ status: 'success', message: "心智圖 '" + mindMapName + "' 已成功新增。" });
+}
+
+/**
+ * 處理刪除心智圖的邏輯
+ */
+function handleDelete(postData, listSheet, dataSheet) {
+  var dataId = postData.id;
+  if (!dataId) {
+    throw new Error('缺少要刪除的資料ID。');
+  }
+
+  var listData = listSheet.getDataRange().getValues();
+  var listRowToDelete = -1;
+  for (var i = 1; i < listData.length; i++) {
+    if (listData[i][3] === dataId) {
+      listRowToDelete = i + 1;
+      break;
+    }
+  }
+
+  if (listRowToDelete > -1) {
+    listSheet.deleteRow(listRowToDelete);
+  }
+
+  var dataSheetData = dataSheet.getDataRange().getValues();
+  var dataRowToDelete = -1;
+  for (var j = 1; j < dataSheetData.length; j++) {
+    if (dataSheetData[j][0] === dataId) {
+      dataRowToDelete = j + 1;
+      break;
+    }
+  }
+
+  if (dataRowToDelete > -1) {
+    dataSheet.deleteRow(dataRowToDelete);
+  }
+  
+  if (listRowToDelete > -1 || dataRowToDelete > -1) {
+      return createJsonResponse({ status: 'success', message: '資料已成功刪除。' });
+  } else {
+      throw new Error('在試算表中找不到要刪除的資料ID: ' + dataId);
+  }
+}
+
+/**
+ * 檢查並初始化所需的工作表和標頭
+ */
+function setupSheets() {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var listSheet = ss.getSheetByName(SHEET_LIST_NAME);
+  if (!listSheet) {
+    listSheet = ss.insertSheet(SHEET_LIST_NAME);
+    listSheet.appendRow(LIST_HEADERS);
+    listSheet.setFrozenRows(1);
+    listSheet.getRange('A:D').applyRowBanding();
+    listSheet.setColumnWidth(1, 250);
+    listSheet.setColumnWidth(2, 150);
+    listSheet.setColumnWidth(3, 200);
+    listSheet.setColumnWidth(4, 300);
+  }
+
+  var dataSheet = ss.getSheetByName(SHEET_DATA_NAME);
+  if (!dataSheet) {
+    dataSheet = ss.insertSheet(SHEET_DATA_NAME);
+    dataSheet.appendRow(DATA_HEADERS);
+    dataSheet.setFrozenRows(1);
+    dataSheet.setColumnWidth(1, 300);
+    dataSheet.setColumnWidth(2, 800);
+  }
+  
+  return { listSheet: listSheet, dataSheet: dataSheet };
+}
+
+/**
+ * 產生一個簡易的唯一ID (UUID v4)
+ */
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+/**
+ * 建立一個標準的 JSON 回應
+ */
+function createJsonResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+</code></pre>
+              </div>
+
+              <h3>步驟二：建立 Google 試算表與開啟 Apps Script</h3>
+              <ol>
+                  <li>前往 <a href="https://sheets.new" target="_blank">Google 試算表</a> 建立一份新的、空白的試算表。</li>
+                  <li>在試算表頁面中，點擊頂部選單的「擴充功能」 > 「Apps Script」。</li>
+              </ol>
+
+              <h3>步驟三：貼上程式碼並初次部署</h3>
+              <ol>
+                  <li>在 Apps Script 編輯器中，刪除所有預設程式碼，然後將您剛剛複製的程式碼完整貼上。</li>
+                  <li>點擊上方的「儲存專案」圖示。</li>
+                  <li>點擊右上角的藍色按鈕「部署」 > 「新增部署作業」。</li>
+                  <li>在「選取類型」旁點擊齒輪圖示，選擇「網路應用程式」。</li>
+                  <li>**非常重要**：將「誰可以存取」設定為「**任何人**」。</li>
+                  <li>點擊「部署」，並在跳出的視窗中完成授權 (可能會提示不安全，請點擊「進階」並繼續)。</li>
+                  <li>授權後，複製產生的「網路應用程式 URL」。</li>
+              </ol>
+              <p>完成以上步驟後，您就可以將複製的 URL，透過前面提到的兩種方式之一，設定到本工具中。</p>
+          </div>
+          <div class="modal-buttons">
+              <button id="btn_close_help" class="btn">關閉</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="link_modal_overlay" class="modal-overlay">
+      <div class="modal-content">
+          <h2>設定節點超連結</h2>
+          <p>請貼上要連結的網址 (留空則清除連結):</p>
+          <input type="text" id="link_url_input" class="modal-input" placeholder="https://example.com">
+          <div class="modal-buttons">
+              <button id="btn_cancel_link" class="btn">取消</button>
+              <button id="btn_save_link" class="btn">儲存</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="image_url_modal_overlay" class="modal-overlay">
+      <div class="modal-content">
+          <h2>設定節點圖片</h2>
+          
+          <!-- Manual URL Input -->
+          <p>請貼上圖片的網址 (留空則清除圖片):</p>
+          <input type="text" id="image_url_input" class="modal-input" placeholder="https://example.com/image.png">
+
+          <hr style="margin: 20px 0; border-top: 1px solid #ccc;">
+
+          <!-- Google Doc Extractor -->
+          <p>或從已發佈的 Google 文件網址提取圖片:</p>
+          <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+            <input type="url" id="gdoc_url_input" class="modal-input" placeholder="https://docs.google.com/document/d/e/.../pub" style="flex-grow: 1;">
+            <button id="btn_fetch_gdoc" class="btn" style="background-image: linear-gradient(45deg,#42a5f5,#1e88e5);">提取</button>
+          </div>
+          <div id="gdoc_status" style="text-align: center; margin: 10px 0;"></div>
+          <div id="gdoc_image_results" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; padding: 5px; display: flex; flex-wrap: wrap; gap: 5px;">
+            <!-- Fetched images will appear here -->
+          </div>
+
+          <div class="modal-buttons">
+              <button id="btn_cancel_image_url" class="btn">取消</button>
+              <button id="btn_save_image_url" class="btn">儲存</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="prompt_modal_overlay" class="modal-overlay">
+    <div class="modal-content">
+        <h2>參考 Prompt</h2>
+        <div class="modal-body">
+            <div class="code-container" style="position: relative;">
+                <button id="btn_copy_prompt" class="btn" style="position: absolute; top: 10px; right: 10px; background-image: linear-gradient(45deg,#66bb6a,#388e3c);">複製</button>
+                <pre><code id="prompt_text_block"># 任務：生成心智圖 Markdown 語法 (純文字版)
+
+請你扮演一位特定領域的專家，為「[請填入您的對象]」（例如：國小高年級學生、初學者、專業人士等）設計一份關於「[請填入您的主題]」的純文字心智圖。
+
+## 格式要求 (極為重要)：
+
+請你「務必」且「只能」使用以下的 Markdown 格式來生成內容：
+
+1.  **層級結構**：
+    * **根節點 (Root)**：必須使用一個 `#` (H1)。
+    * **主分支**：必須使用兩個 `##` (H2)。
+    * **子分支**：必須使用三個 `###` (H3)。
+    * **孫分支**：必須使用四個 `####` (H4)，以此類推。
+    * (請勿使用 `-` 或 `*` 列表符號來表示層級)。
+
+2.  **限制**：
+    * 每一行就是一個節點。
+    * 內容中**不可以**包含任何超連結 (例如 `[text](url)`) 或圖片 (例如 `![alt](url)`)。
+    * 第一行**必須是** `#` (H1) 根節點。
+
+## 範例結構：
+
+'''markdown
+# 範例主題
+## 重點一
+### 子重點 1.1
+### 子重點 1.2
+## 重點二
+### 子重點 2.1
+### 子重點 2.2
+#### 子重點 2.2.1
+## 重點三
+'''</code></pre>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button id="btn_close_prompt" class="btn">關閉</button>
+        </div>
+    </div>
+  </div>
+
+  <script src="mindmap.js"></script>
+</body>
+</html>
