@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>「現代冰河期」影片學習測驗</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 使用 Inter 字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 優先使用 Noto Sans TC 處理中文，Inter 處理英文與數字 */
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+        /* 載入中的樣式 */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center py-12 px-4">
+
+    <div class="w-full max-w-2xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 mb-2">「現代冰河期」影片學習測驗</h1>
+            <p class="text-lg text-gray-600">根據您觀看的影片內容，請回答以下問題。</p>
+        </header>
+
+        <!-- 
+            使用 <form> 標籤包住所有內容，以便我們收集資料並提交。
+            我們將使用 JavaScript 處理提交，而不是傳統的表單提交。
+        -->
+        <form id="quizForm">
+            <main class="space-y-6">
+
+                <!-- 學生資訊欄位 -->
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <h2 class="text-2xl font-semibold text-gray-800 mb-5">學生資訊</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="studentClass" class="block text-md font-medium text-gray-700">班級：</label>
+                            <input type="text" id="studentClass" name="studentClass" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-md p-2 border">
+                        </div>
+                        <div>
+                            <label for="studentName" class="block text-md font-medium text-gray-700">姓名：</label>
+                            <input type="text" id="studentName" name="studentName" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-md p-2 border">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 題目 1 -->
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <fieldset>
+                        <legend class="text-xl font-semibold text-gray-800 mb-4">1. 影片中提到，可能導致「現代迷你冰河期」的主要自然現象是什麼？</legend>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input id="q1-a" name="q1" type="radio" value="A" required class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q1-a" class="ml-3 block text-md text-gray-700">(A) 大規模火山爆發</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q1-b" name="q1" type="radio" value="B" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q1-b" class="ml-3 block text-md text-gray-700">(B) 太陽活動極小期 (Grand Solar Minimum)</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q1-c" name="q1" type="radio" value="C" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q1-c" class="ml-3 block text-md text-gray-700">(C) 地球軌道變化</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q1-d" name="q1" type="radio" value="D" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q1-d" class="ml-3 block text-md text-gray-700">(D) 大西洋溫鹽環流中斷</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 題目 2 -->
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <fieldset>
+                        <legend class="text-xl font-semibold text-gray-800 mb-4">2. 影片參考了歷史上哪個著名的「小冰期」事件，當時泰晤士河甚至都結冰了？</legend>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input id="q2-a" name="q2" type="radio" value="A" required class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q2-a" class="ml-3 block text-md text-gray-700">(A) 蒙德極小期 (Maunder Minimum)</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q2-b" name="q2" type="radio" value="B" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q2-b" class="ml-3 block text-md text-gray-700">(B) 道爾頓極小期 (Dalton Minimum)</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q2-c" name="q2" type="radio" value="C" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q2-c" class="ml-3 block text-md text-gray-700">(C) 史波勒極小期 (Spörer Minimum)</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q2-d" name="q2" type="radio" value="D" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q2-d" class="ml-3 block text-md text-gray-700">(D) 黑暗時代小冰期</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 題目 3 -->
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <fieldset>
+                        <legend class="text-xl font-semibold text-gray-800 mb-4">3. 根據影片的推測，這個假設的「迷你冰河期」最可能在何時開始？</legend>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input id="q3-a" name="q3" type="radio" value="A" required class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q3-a" class="ml-3 block text-md text-gray-700">(A) 1980年代</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q3-b" name="q3" type="radio" value="B" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q3-b" class="ml-3 block text-md text-gray-700">(B) 2030 - 2040 年間</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q3-c" name="q3" type="radio" value="C" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q3-c" class="ml-3 block text-md text-gray-700">(C) 2100 年</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q3-d" name="q3" type="radio" value="D" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q3-d" class="ml-3 block text-md text-gray-700">(D) 已經結束了</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 題目 4 -->
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <fieldset>
+                        <legend class="text-xl font-semibold text-gray-800 mb-4">4. 影片推測，「迷你冰河期」對全球最大的威脅之一是什麼？</legend>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input id="q4-a" name="q4" type="radio" value="A" required class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q4-a" class="ml-3 block text-md text-gray-700">(A) 網際網路全面中斷</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q4-b" name="q4" type="radio" value="B" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q4-b" class="ml-3 block text-md text-gray-700">(B) 全球流行病爆發</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q4-c" name="q4" type="radio" value="C" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q4-c" class="ml-3 block text-md text-gray-700">(C) 生長季節縮短導致的糧食危機</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q4-d" name="q4" type="radio" value="D" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q4-d" class="ml-3 block text-md text-gray-700">(D) 海平面大幅上升</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 題目 5 -->
+                <div class="bg-white rounded-lg shadow-lg p-6 md:p-8">
+                    <fieldset>
+                        <legend class="text-xl font-semibold text-gray-800 mb-4">5. 在假設的情境中，全球哪些地區將會經歷最嚴酷、最長的冬季？</legend>
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <input id="q5-a" name="q5" type="radio" value="A" required class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q5-a" class="ml-3 block text-md text-gray-700">(A) 澳洲與紐西蘭</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q5-b" name="q5" type="radio" value="B" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q5-b" class="ml-3 block text-md text-gray-700">(B) 歐洲與北美洲</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q5-c" name="q5" type="radio" value="C" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q5-c" class="ml-3 block text-md text-gray-700">(C) 撒哈拉沙漠地區</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input id="q5-d" name="q5" type="radio" value="D" class="h-4 w-4 text-indigo-600 border-gray-300">
+                                <label for="q5-d" class="ml-3 block text-md text-gray-700">(D) 赤道地區</label>
+                            </div>
+                        </div>
+                    </fieldset>
+                </div>
+
+                <!-- 提交按鈕和狀態訊息 -->
+                <div class="mt-8 text-center">
+                    <button id="submitButton" type="submit" class="bg-green-600 text-white px-8 py-3 rounded-md text-lg font-semibold hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                        提交測驗
+                    </button>
+                    <div id="submissionStatus" class="mt-4 text-lg font-medium"></div>
+                </div>
+
+            </main>
+        </form>
+    </div>
+
+    <script>
+        // --- Google 試算表設定 (重要！) ---
+        // 1. 請在您的 Google 雲端硬碟建立一個新的「Google 試算表」。
+        // 2. 在試算表的第一行 (Row 1) 建立標題，順序如下：
+        //    Timestamp | Class | Name | Q1 | Q2 | Q3 | Q4 | Q5 | Score
+        //
+        // 3. 點擊「擴充功能」 > 「Apps Script」。
+        // 4. 刪除 `Code.gs` 中的所有內容，然後貼上下方的 Apps Script 程式碼。
+        //
+        // ---- Apps Script 程式碼 (請貼到 Code.gs) ----
+        /*
+        
+        function doPost(e) {
+          try {
+            var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+            var data = JSON.parse(e.postData.contents);
+            
+            // 根據 HTML 傳來的資料順序
+            var row = [
+              new Date(),        // Timestamp
+              data.studentClass, // 班級
+              data.studentName,  // 姓名
+              data.q1,             // Q1 答案
+              data.q2,             // Q2 答案
+              data.q3,             // Q3 答案
+              data.q4,             // Q4 答案
+              data.q5,             // Q5 答案
+              data.score           // 分數
+            ];
+            
+            sheet.appendRow(row);
+            
+            return ContentService.createTextOutput(JSON.stringify({
+              result: "success"
+            })).setMimeType(ContentService.MimeType.JSON);
+            
+          } catch (error) {
+            return ContentService.createTextOutput(JSON.stringify({
+              result: "error",
+              message: error.message
+            })).setMimeType(ContentService.MimeType.JSON);
+          }
+        }
+        
+        */
+        //
+        // 5. 儲存 Apps Script 專案。
+        // 6. 點擊右上角的「部署」 > 「新增部署作業」。
+        // 7. 選擇「類型」為「網頁應用程式」。
+        // 8. 在「誰有權存取」的下拉選單中，選擇「任何人」。
+        // 9. 點擊「部署」。
+        // 10. 授權 Google 存取 (可能需要點擊「進階」，然後「前往... (不安全)」)。
+        // 11. 複製「網頁應用程式網址」(格式為 https://script.google.com/macros/s/...)
+        // 12. 將複製的網址貼到下面的 `GAS_WEB_APP_URL` 變數中。
+        // ------------------------------------
+
+        // ↓↓↓ 將您的網頁應用程式網址貼在這裡 ↓↓↓
+        const GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyRD67m4QrxxWWbw6XKHIX4bhw4mhpItk1MulDJ9_O_QYIrvt239LoEo3WYK2OQ__io/exec';
+        
+        // 正確答案 (用於計分)
+        const correctAnswers = {
+            q1: 'B',
+            q2: 'A',
+            q3: 'B',
+            q4: 'C',
+            q5: 'B'
+        };
+
+        const quizForm = document.getElementById('quizForm');
+        const submitButton = document.getElementById('submitButton');
+        const submissionStatus = document.getElementById('submissionStatus');
+
+        quizForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // 防止表單傳統提交
+
+            // 檢查是否已填入 GAS URL
+            if (GAS_WEB_APP_URL === 'YOUR_APPS_SCRIPT_WEB_APP_URL_HERE') {
+                submissionStatus.innerHTML = '<span class="text-red-600">錯誤：請先在 HTML 檔案中設定 Google Apps Script 網址！</span>';
+                return;
+            }
+
+            // 顯示載入中...
+            submitButton.disabled = true;
+            submissionStatus.innerHTML = '<div class_name="flex items-center justify-center"><span class="loader"></span> 正在提交...</div>';
+
+            // 1. 收集表單資料
+            const formData = new FormData(quizForm);
+            const data = {
+                studentClass: formData.get('studentClass'),
+                studentName: formData.get('studentName'),
+                q1: formData.get('q1'),
+                q2: formData.get('q2'),
+                q3: formData.get('q3'),
+                q4: formData.get('q4'),
+                q5: formData.get('q5'),
+                score: 0 // 先初始化分數
+            };
+
+            // 2. 計算分數
+            let score = 0;
+            const totalQuestions = Object.keys(correctAnswers).length;
+            for (const [question, answer] of Object.entries(correctAnswers)) {
+                if (data[question] === answer) {
+                    score++;
+                }
+            }
+            data.score = `${score} / ${totalQuestions}`; // 格式化分數 (例如: "4 / 5")
+
+            // 3. 發送資料到 Google Apps Script
+            try {
+                const response = await fetch(GAS_WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'cors', // 允許跨域請求
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    // 重新導向處理
+                    redirect: 'follow',
+                    // 將 JS 物件轉為 JSON 字串
+                    body: JSON.stringify(data)
+                });
+
+                // Google Apps Script 的 doPost 回應通常是 text/plain，即使我們設定了 MimeType
+                // 我們直接解析它
+                const resultText = await response.text();
+                const result = JSON.parse(resultText);
+
+
+                if (result.result === "success") {
+                    // 成功
+                    submissionStatus.innerHTML = `<span class="text-green-600">提交成功！您的分數是：${data.score}</span>`;
+                    // 禁用所有輸入欄位
+                    quizForm.querySelectorAll('input, button').forEach(el => el.disabled = true);
+                } else {
+                    // Apps Script 內部錯誤
+                    throw new Error(result.message || '未知的 Apps Script 錯誤');
+                }
+            
+            } catch (error) {
+                // 網路錯誤或 fetch 失敗
+                console.error('提交錯誤:', error);
+                submissionStatus.innerHTML = `<span class="text-red-600">提交失敗，請檢查網路連線或 Apps Script 設定。(${error.message})</span>`;
+                submitButton.disabled = false; // 讓使用者可以重試
+            }
+        });
+    </script>
+
+</body>
+</html>
