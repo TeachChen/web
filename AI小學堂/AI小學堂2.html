@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國小 AI 小學堂</title>
+    <!-- 載入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 載入 Google Font "Inter" -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 應用字型 */
+        body {
+            font-family: 'Inter', 'Noto Sans TC', sans-serif;
+        }
+        /* 按鈕點擊時的樣式 */
+        .option-btn:active, .btn:active {
+            transform: scale(0.95);
+        }
+        /* 正確答案的樣式 */
+        .correct {
+            background-color: #22c55e !important; /* Tailwind green-500 */
+            color: white !important;
+            border-color: #16a34a !important; /* Tailwind green-600 */
+        }
+        /* 錯誤答案的樣式 */
+        .incorrect {
+            background-color: #ef4444 !important; /* Tailwind red-500 */
+            color: white !important;
+            border-color: #dc2626 !important; /* Tailwind red-600 */
+        }
+        /* 隱藏元素 */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-blue-50 min-h-screen flex items-center justify-center p-4">
+
+    <!-- 測驗容器 -->
+    <div id="quiz-container" class="bg-white w-full max-w-xl p-6 md:p-8 rounded-2xl shadow-xl transition-all duration-300">
+        
+        <!-- 測驗標題 -->
+        <h1 class="text-3xl font-bold text-center text-blue-800 mb-6">
+            國小 AI 小學堂
+        </h1>
+
+        <!-- 學生資料輸入畫面 -->
+        <div id="user-info-screen">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">開始測驗前，請輸入：</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="class-input" class="block text-sm font-medium text-gray-600 mb-1">班級 (例如: 三年二班)</label>
+                    <input type="text" id="class-input" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入班級">
+                </div>
+                <div>
+                    <label for="name-input" class="block text-sm font-medium text-gray-600 mb-1">姓名</label>
+                    <input type="text" id="name-input" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="請輸入姓名">
+                </div>
+            </div>
+            <div id="user-info-error" class="mt-4 text-center font-medium text-red-600"></div>
+            <button id="start-quiz-btn" class="btn w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg mt-6 hover:bg-blue-700 transition-all duration-200">
+                開始測驗
+            </button>
+        </div>
+
+        <!-- 測驗內容 (問題與分數) (預設隱藏) -->
+        <div id="quiz-content" class="hidden">
+            <!-- 問題區域 -->
+            <div id="question-area">
+                <div class="flex justify-between items-center mb-4">
+                    <span id="question-count" class="text-sm font-medium text-blue-600 px-3 py-1 bg-blue-100 rounded-full"></span>
+                    <span id="current-score" class="text-sm font-medium text-green-600">分數: 0</span>
+                </div>
+                <h2 id="question-text" class="text-xl md:text-2xl font-semibold text-gray-800 mb-6 min-h-[60px]">
+                    <!-- 問題文字將由 JavaScript 載入 -->
+                </h2>
+            </div>
+
+            <!-- 選項按鈕 -->
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- 選項將由 JavaScript 動態生成 -->
+            </div>
+
+            <!-- 回饋訊息 -->
+            <div id="feedback-message" class="mt-4 text-center font-medium"></div>
+
+            <!-- 下一題按鈕 (預設隱藏) -->
+            <button id="next-btn" class="btn w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg mt-6 hover:bg-blue-700 transition-all duration-200 hidden">
+                下一題
+            </button>
+        </div>
+
+        <!-- 最終分數畫面 (預設隱藏) -->
+        <div id="score-screen" class="hidden text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">測驗完成！</h2>
+            <p id="final-score" class="text-4xl font-bold text-blue-800 mb-6">
+                <!-- 最終分數 -->
+            </p>
+            <p id="final-message" class="text-lg text-gray-600 mb-8"></p>
+            
+            <!-- 正在紀錄分數... 提示 -->
+            <div id="loading-message" class="text-gray-500 mb-4 hidden">正在紀錄分數...</div>
+
+            <button id="restart-btn" class="btn w-full bg-green-500 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-600 transition-all duration-200">
+                重新測驗
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 題目資料 (來自 PDF 內容)
+        const questions = [
+            {
+                question: "「AI」的中文是什麼意思？",
+                options: [
+                    { text: "人工智慧", isCorrect: true },
+                    { text: "超級電腦", isCorrect: false },
+                    { text: "網路連線", isCorrect: false },
+                    { text: "電動玩具", isCorrect: false }
+                ]
+            },
+            {
+                question: "下列哪一個「不是」課本中提到生活中的 AI 應用？",
+                options: [
+                    { text: "智慧型手機", isCorrect: false },
+                    { text: "掃地機器人", isCorrect: false },
+                    { text: "腳踏車", isCorrect: true },
+                    { text: "人臉辨識", isCorrect: false }
+                ]
+            },
+            {
+                question: "我們可以用聲音和手機上的哪一個 AI 助理說話？",
+                options: [
+                    { text: "Siri 或 Google 助理", isCorrect: true },
+                    { text: "爸爸媽媽", isCorrect: false },
+                    { text: "學校老師", isCorrect: false },
+                    { text: "電視機", isCorrect: false }
+                ]
+            },
+            {
+                question: "在「無人商店」裡，AI 系統是使用什麼來判斷你拿走了什麼商品？",
+                options: [
+                    { text: "魔法", isCorrect: false },
+                    { text: "攝影機和感應器", isCorrect: true },
+                    { text: "店員心算", isCorrect: false },
+                    { text: "貼紙", isCorrect: false }
+                ]
+            },
+            {
+                question: "在「智慧住宅」裡，我們可以用什麼方式控制電燈和冷氣？",
+                options: [
+                    { text: "唱歌", isCorrect: false },
+                    { text: "畫畫", isCorrect: false },
+                    { text: "念力", isCorrect: false },
+                    { text: "聲音 (語音聲控)", isCorrect: true }
+                ]
+            },
+            {
+                question: "「智慧紅綠燈」的主要功能是什麼？",
+                options: [
+                    { text: "讓紅燈時間變更長", isCorrect: false },
+                    { text: "根據車流量調整號誌時間", isCorrect: true },
+                    { text: "播放好聽的音樂", isCorrect: false },
+                    { text: "讓燈光更漂亮", isCorrect: false }
+                ]
+            },
+            {
+                question: "什麼是「自動駕駛汽車」？",
+                options: [
+                    { text: "會飛的車", isCorrect: false },
+                    { text: "會潛水的車", isCorrect: false },
+                    { text: "需要司機一直開的車", isCorrect: false },
+                    { text: "可以自己導航和駕駛的車", isCorrect: true }
+                ]
+            },
+            {
+                question: "在教育方面，AI 可以如何幫助我們學習？",
+                options: [
+                    { text: "幫我們寫作業", isCorrect: false },
+                    { text: "提供個人化的學習建議", isCorrect: true },
+                    { text: "幫我們考試", isCorrect: false },
+                    { text: "幫我們蹺課", isCorrect: false }
+                ]
+            },
+            {
+                question: "打敗世界圍棋冠軍的知名 AI 叫做什麼名字？",
+                options: [
+                    { text: "AlphaGo", isCorrect: true },
+                    { text: "Pepper", isCorrect: false },
+                    { text: "Siri", isCorrect: false },
+                    { text: "掃地機器人", isCorrect: false }
+                ]
+            },
+            {
+                question: "在網路上買衣服時，AI 可以提供什麼有趣的功能？",
+                options: [
+                    { text: "幫你付錢", isCorrect: false },
+                    { text: "幫你洗衣服", isCorrect: false },
+                    { text: "虛擬試穿", isCorrect: true },
+                    { text: "幫你折衣服", isCorrect: false }
+                ]
+            }
+        ];
+
+        // DOM 元素
+        const quizContainer = document.getElementById('quiz-container');
+        const userInfoScreen = document.getElementById('user-info-screen');
+        const classInput = document.getElementById('class-input');
+        const nameInput = document.getElementById('name-input');
+        const userInfoError = document.getElementById('user-info-error');
+        const startQuizBtn = document.getElementById('start-quiz-btn');
+
+        const quizContent = document.getElementById('quiz-content');
+        const questionArea = document.getElementById('question-area');
+        const questionCount = document.getElementById('question-count');
+        const currentScoreEl = document.getElementById('current-score');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const nextBtn = document.getElementById('next-btn');
+        
+        const scoreScreen = document.getElementById('score-screen');
+        const finalScore = document.getElementById('final-score');
+        const finalMessage = document.getElementById('final-message');
+        const loadingMessage = document.getElementById('loading-message');
+        const restartBtn = document.getElementById('restart-btn');
+
+        // 測驗狀態
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answerSelected = false;
+        let userClass = '';
+        let userName = '';
+
+        // 隨機打亂題目順序
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // 載入問題
+        function loadQuestion() {
+            answerSelected = false; // 重置答案選擇狀態
+            feedbackMessage.textContent = ''; // 清除回饋
+            nextBtn.classList.add('hidden'); // 隱藏下一題按鈕
+            optionsContainer.innerHTML = ''; // 清空舊選項
+
+            if (currentQuestionIndex >= questions.length) {
+                showScore();
+                return;
+            }
+
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // 更新問題文字和計數
+            questionText.textContent = currentQuestion.question;
+            questionCount.textContent = `問題 ${currentQuestionIndex + 1} / ${questions.length}`;
+            currentScoreEl.textContent = `分數: ${score}`;
+
+            // 隨機打亂選項
+            shuffleArray(currentQuestion.options);
+
+            // 建立選項按鈕
+            currentQuestion.options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option.text;
+                button.classList.add('option-btn', 'w-full', 'p-4', 'border-2', 'border-blue-300', 'rounded-lg', 'text-left', 'font-medium', 'text-gray-700', 'hover:bg-blue-100', 'hover:border-blue-500', 'transition-all', 'duration-200');
+                
+                button.addEventListener('click', () => selectAnswer(button, option));
+                optionsContainer.appendChild(button);
+            });
+        }
+
+        // 選擇答案
+        function selectAnswer(button, selectedOption) {
+            if (answerSelected) return; // 如果已經選擇答案，則不執行
+            answerSelected = true;
+
+            // 禁用所有按鈕
+            Array.from(optionsContainer.children).forEach(btn => {
+                btn.disabled = true;
+                // 移除 hover 效果
+                btn.classList.remove('hover:bg-blue-100', 'hover:border-blue-500');
+            });
+
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            if (selectedOption.isCorrect) {
+                score++; // 加分
+                currentScoreEl.textContent = `分數: ${score}`;
+                button.classList.add('correct');
+                feedbackMessage.textContent = '答對了！你真棒！👍';
+                feedbackMessage.classList.add('text-green-600');
+                feedbackMessage.classList.remove('text-red-600');
+            } else {
+                button.classList.add('incorrect');
+                feedbackMessage.textContent = '答錯了，再接再厲！💪';
+                feedbackMessage.classList.add('text-red-600');
+                feedbackMessage.classList.remove('text-green-600');
+                
+                // 顯示正確答案
+                Array.from(optionsContainer.children).forEach((btn, index) => {
+                    if (currentQuestion.options[index].isCorrect) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            // 顯示下一題按鈕
+            nextBtn.classList.remove('hidden');
+        }
+
+        // 顯示最終分數
+        function showScore() {
+            quizContent.classList.add('hidden'); // 隱藏問題區
+            scoreScreen.classList.remove('hidden'); // 顯示分數區
+
+            finalScore.textContent = `${score} / ${questions.length} 分`;
+
+            let message = '';
+            const percentage = (score / questions.length) * 100;
+            if (percentage === 100) {
+                message = '太厲害了！全部答對！你就是 AI 小博士！ 🏆';
+            } else if (percentage >= 80) {
+                message = '非常棒！你對 AI 有很深的了解喔！ 🌟';
+            } else if (percentage >= 50) {
+                message = '不錯喔！繼續加油！ 🧠';
+            } else {
+                message = '別灰心，再試一次，你會更進步！ 💡';
+            }
+            finalMessage.textContent = message;
+
+            // 呼叫函式來紀錄分數
+            logToGoogleSheet(userClass, userName, score, questions.length);
+        }
+
+        // 紀錄到 Google Sheet
+        async function logToGoogleSheet(userClass, userName, score, totalQuestions) {
+            // ----- ！！！重要！！！ -----
+            // 請將 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE' 替換成您自己的 Google Apps Script 網路應用程式 URL
+            // 請參考 'instructions_google_sheet.md' 檔案來建立您的 URL
+            const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzNollbeQIlPEp8HQvrm3rVJavl7MUChEu1CunpqVhQSHaLf7nk-AB2TgRNJFphgJ2z/exec';
+            
+            loadingMessage.classList.remove('hidden');
+            loadingMessage.textContent = '正在紀錄分數...';
+
+            if (APPS_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                console.warn("Google Apps Script URL is not set. Skipping log.");
+                loadingMessage.textContent = '紀錄功能未設定。 (請洽管理員)';
+                setTimeout(() => { loadingMessage.classList.add('hidden'); }, 3000);
+                return;
+            }
+
+            const data = {
+                class: userClass,
+                name: userName,
+                score: score,
+                total: totalQuestions
+            };
+
+            try {
+                const response = await fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors', // 允許跨域請求
+                    cache: 'no-cache',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    redirect: 'follow',
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                if (result.result === "success") {
+                    loadingMessage.textContent = '分數已紀錄！';
+                } else {
+                    throw new Error(result.message || 'Unknown error from Apps Script');
+                }
+                
+                setTimeout(() => { loadingMessage.classList.add('hidden'); }, 2000);
+
+            } catch (error) {
+                console.error('Error logging to Google Sheet:', error);
+                loadingMessage.textContent = '紀錄失敗，請檢查設定或網路。';
+                setTimeout(() => { loadingMessage.classList.add('hidden'); }, 3000);
+            }
+        }
+
+
+        // 重新開始測驗
+        function restartQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            userClass = '';
+            userName = '';
+            
+            // 清空輸入欄位
+            classInput.value = '';
+            nameInput.value = '';
+            userInfoError.textContent = '';
+
+            // 重置畫面
+            scoreScreen.classList.add('hidden');
+            quizContent.classList.add('hidden');
+            userInfoScreen.classList.remove('hidden');
+        }
+
+        // --- 啟動 ---
+        
+        // "開始測驗" 按鈕監聽
+        startQuizBtn.addEventListener('click', () => {
+            userClass = classInput.value.trim();
+            userName = nameInput.value.trim();
+
+            if (userClass === '' || userName === '') {
+                userInfoError.textContent = '請務必填寫班級和姓名喔！';
+                return;
+            }
+
+            // 驗證通過
+            userInfoError.textContent = '';
+            userInfoScreen.classList.add('hidden');
+            quizContent.classList.remove('hidden');
+            
+            // 隨機打亂題目並載入
+            shuffleArray(questions); 
+            loadQuestion();
+        });
+
+
+        // "下一題" 按鈕監聽
+        nextBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            loadQuestion();
+        });
+
+        // "重新測驗" 按鈕監聽
+        restartBtn.addEventListener('click', restartQuiz);
+
+        // 初始狀態：不自動載入問題，等待使用者輸入資料
+        // (shuffleArray 和 loadQuestion 移到 "start-quiz-btn" 的監聽事件中)
+
+    </script>
+
+</body>
+</html>
