@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>現代冰河期知識測驗</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', 'Heiti TC', sans-serif;
+            background: linear-gradient(135deg, #e0f7fa 0%, #80deea 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .option-btn {
+            transition: all 0.3s ease;
+        }
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        }
+        .option-btn.correct {
+            background-color: #10b981 !important;
+            border-color: #10b981 !important;
+            color: white !important;
+        }
+        .option-btn.wrong {
+            background-color: #ef4444 !important;
+            border-color: #ef4444 !important;
+            color: white !important;
+            opacity: 0.7;
+        }
+        .input-field {
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .input-field:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            outline: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-slate-800">
+
+    <div class="glass-card w-full max-w-2xl p-8 relative overflow-hidden">
+        
+        <!-- Decorative Ice Elements -->
+        <div class="absolute -top-10 -right-10 text-9xl text-blue-100 opacity-50 pointer-events-none">
+            <i class="fas fa-snowflake"></i>
+        </div>
+        <div class="absolute bottom-10 -left-10 text-8xl text-blue-50 opacity-50 pointer-events-none">
+            <i class="fas fa-icicles"></i>
+        </div>
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="text-center relative z-10">
+            <div class="mb-4 inline-block p-4 rounded-full bg-blue-100 text-blue-600 text-4xl">
+                <i class="fas fa-globe-americas"></i>
+            </div>
+            <h1 class="text-3xl font-bold mb-2 text-slate-800">現代冰河期知識大考驗</h1>
+            <p class="text-md text-slate-600 mb-6">請輸入基本資料開始測驗</p>
+
+            <!-- Input Fields Section -->
+            <div class="bg-blue-50 p-6 rounded-xl mb-6 max-w-md mx-auto text-left shadow-sm border border-blue-100">
+                <div class="mb-4">
+                    <label for="student-class" class="block text-sm font-bold text-slate-700 mb-2">班級</label>
+                    <input type="text" id="student-class" placeholder="例如：801" class="input-field w-full p-3 rounded-lg border border-gray-300 text-lg">
+                </div>
+                <div class="mb-4">
+                    <label for="student-name" class="block text-sm font-bold text-slate-700 mb-2">姓名</label>
+                    <input type="text" id="student-name" placeholder="請輸入姓名" class="input-field w-full p-3 rounded-lg border border-gray-300 text-lg">
+                </div>
+                <div class="mb-2">
+                    <label for="student-no" class="block text-sm font-bold text-slate-700 mb-2">座號 (選填)</label>
+                    <input type="number" id="student-no" placeholder="例如：15" class="input-field w-full p-3 rounded-lg border border-gray-300 text-lg">
+                </div>
+                <p id="input-error" class="text-red-500 text-sm mt-2 hidden"><i class="fas fa-exclamation-circle"></i> 請完整填寫班級與姓名！</p>
+            </div>
+
+            <button onclick="startQuiz()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition transform hover:scale-105 text-lg w-full max-w-xs">
+                開始測驗 <i class="fas fa-arrow-right ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden relative z-10">
+            <!-- User Info Header -->
+            <div class="flex justify-between items-center bg-white/50 p-2 rounded-lg mb-4 text-xs md:text-sm text-slate-600">
+                <span><i class="fas fa-user mr-1"></i> <span id="display-info"></span></span>
+                <span id="score-display" class="font-bold text-blue-600">得分: 0</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-6">
+                <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                    第 <span id="current-question-num">1</span> / 5 題
+                </span>
+            </div>
+
+            <h2 id="question-text" class="text-xl md:text-2xl font-bold mb-6 text-slate-800 min-h-[4rem]">
+                題目載入中...
+            </h2>
+
+            <div id="options-container" class="space-y-3">
+                <!-- Options will be injected here -->
+            </div>
+
+            <div id="feedback-area" class="hidden mt-6 p-4 rounded-lg bg-gray-50 border-l-4">
+                <p id="feedback-text" class="font-medium text-lg mb-1"></p>
+                <p id="explanation-text" class="text-sm text-gray-600"></p>
+                <button onclick="nextQuestion()" id="next-btn" class="mt-4 bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg transition">
+                    下一題
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden text-center relative z-10">
+            <div id="result-icon" class="mb-4 text-6xl animate-bounce"></div>
+            <h2 class="text-3xl font-bold mb-2">測驗結束！</h2>
+            <p class="text-xl text-slate-600 mb-6">你的最終成績</p>
+            
+            <div class="text-6xl font-black text-blue-600 mb-6">
+                <span id="final-score">0</span><span class="text-2xl text-gray-400">/100</span>
+            </div>
+
+            <!-- Upload Status -->
+            <div id="upload-status" class="mb-6 p-3 rounded-lg bg-gray-100 inline-flex items-center">
+                <i class="fas fa-spinner fa-spin text-blue-500 mr-2"></i>
+                <span class="text-gray-600">正在儲存成績至雲端...</span>
+            </div>
+            
+            <p id="result-message" class="text-lg font-medium mb-8 text-slate-500"></p>
+
+            <button onclick="resetQuiz()" class="bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-bold py-3 px-8 rounded-full shadow-md transition transform hover:scale-105">
+                <i class="fas fa-redo mr-2"></i> 重新測驗 (不重複計分)
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // ==========================================
+        // CONFIGURATION: Paste your GAS Web App URL here
+        // ==========================================
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbyLLG7m-MP9RrQH8i4YJiivEXCa7aH287WJeNTvk59EsvpbGvdWF1oT1ADIyuCaxXd0vQ/exec'; 
+        // 例如: const GAS_URL = 'https://script.google.com/macros/s/AKfycbx.../exec';
+        // ==========================================
+
+        const quizData = [
+            {
+                question: "根據科學定義，地球目前之所以被認為處於「冰河時期」，主要原因是什麼？",
+                options: [
+                    "因為全球平均氣溫在攝氏0度以下",
+                    "因為地球的兩極（南極與格陵蘭）仍存在永久性的冰蓋",
+                    "因為太陽活動目前處於最低點",
+                    "因為海洋目前完全結冰"
+                ],
+                correct: 1,
+                explanation: "只要地球表面有永久性的極地冰蓋存在，科學上就定義為處於「冰河時期」。我們目前處於其中的「間冰期」。"
+            },
+            {
+                question: "我們目前正處於冰河時期中相對溫暖的階段，這個階段稱為什麼？",
+                options: [
+                    "小冰期 (Little Ice Age)",
+                    "冰期 (Glacial Period)",
+                    "間冰期 (Interglacial Period)",
+                    "溫室期 (Greenhouse Period)"
+                ],
+                correct: 2,
+                explanation: "冰河時期包含了寒冷的「冰期」與溫暖的「間冰期」。我們目前處於「全新世間冰期」。"
+            },
+            {
+                question: "影響地球冰河期與間冰期週期性變化的天文因素（地球軌道變化）稱為什麼？",
+                options: [
+                    "月球引力循環",
+                    "米蘭科維奇循環 (Milankovitch Cycles)",
+                    "哈雷彗星週期",
+                    "板塊構造運動"
+                ],
+                correct: 1,
+                explanation: "米蘭科維奇循環描述了地球軌道形狀、地軸傾斜度和進動的長期變化，影響了日照量。"
+            },
+            {
+                question: "歷史上 14-19 世紀的短暫寒冷時期（如泰晤士河結冰）被稱為什麼？",
+                options: [
+                    "大冰河期",
+                    "新仙女木期",
+                    "小冰河期 (Little Ice Age)",
+                    "雪球地球"
+                ],
+                correct: 2,
+                explanation: "這段時期被稱為「小冰河期」，可能由太陽活動減弱和火山爆發引起。"
+            },
+            {
+                question: "科學家擔心人類溫室氣體排放可能會導致什麼結果？",
+                options: [
+                    "加速下一次冰期",
+                    "完全沒有影響",
+                    "延遲甚至取消下一次冰期的到來",
+                    "導致海平面下降"
+                ],
+                correct: 2,
+                explanation: "溫室效應可能會打破自然的冰河循環，造成「延遲的冰河期」。"
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAnswered = false;
+        let studentInfo = {
+            class: '',
+            name: '',
+            no: ''
+        };
+
+        // DOM Elements
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+        const feedbackArea = document.getElementById('feedback-area');
+        const feedbackText = document.getElementById('feedback-text');
+        const explanationText = document.getElementById('explanation-text');
+        const nextBtn = document.getElementById('next-btn');
+        const progressBar = document.getElementById('progress-bar');
+        const currentQuestionNum = document.getElementById('current-question-num');
+        const scoreDisplay = document.getElementById('score-display');
+        const finalScore = document.getElementById('final-score');
+        const resultMessage = document.getElementById('result-message');
+        const resultIcon = document.getElementById('result-icon');
+        const displayInfo = document.getElementById('display-info');
+        const uploadStatus = document.getElementById('upload-status');
+
+        // Input Elements
+        const inputClass = document.getElementById('student-class');
+        const inputName = document.getElementById('student-name');
+        const inputNo = document.getElementById('student-no');
+        const inputError = document.getElementById('input-error');
+
+        function startQuiz() {
+            const sClass = inputClass.value.trim();
+            const sName = inputName.value.trim();
+            const sNo = inputNo.value.trim();
+
+            if (!sClass || !sName) {
+                inputError.classList.remove('hidden');
+                // Shake animation effect
+                const box = document.querySelector('.glass-card');
+                box.style.transform = "translateX(10px)";
+                setTimeout(() => box.style.transform = "translateX(0)", 100);
+                return;
+            }
+
+            studentInfo = { class: sClass, name: sName, no: sNo };
+            displayInfo.textContent = `${sClass} ${sNo ? sNo + '號' : ''} ${sName}`;
+            inputError.classList.add('hidden');
+
+            startScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            isAnswered = false;
+            feedbackArea.classList.add('hidden');
+            const currentData = quizData[currentQuestionIndex];
+            
+            questionText.textContent = currentData.question;
+            currentQuestionNum.textContent = currentQuestionIndex + 1;
+            
+            const progress = ((currentQuestionIndex) / quizData.length) * 100;
+            progressBar.style.width = `${progress}%`;
+
+            optionsContainer.innerHTML = '';
+            currentData.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn w-full text-left p-4 rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-lg font-medium text-slate-700';
+                button.innerHTML = `<span class="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center leading-8 mr-3 text-sm font-bold">${String.fromCharCode(65 + index)}</span> ${option}`;
+                button.onclick = () => checkAnswer(index, button);
+                optionsContainer.appendChild(button);
+            });
+
+            nextBtn.textContent = (currentQuestionIndex === quizData.length - 1) ? "查看結果" : "下一題";
+        }
+
+        function checkAnswer(selectedIndex, selectedButton) {
+            if (isAnswered) return;
+            isAnswered = true;
+
+            const currentData = quizData[currentQuestionIndex];
+            const buttons = optionsContainer.getElementsByTagName('button');
+
+            if (selectedIndex === currentData.correct) {
+                selectedButton.classList.add('correct');
+                score += 20;
+                feedbackText.textContent = "🎉 答對了！";
+                feedbackText.className = "font-medium text-lg mb-1 text-green-600";
+                feedbackArea.classList.add('border-green-500');
+                feedbackArea.classList.remove('border-red-500');
+            } else {
+                selectedButton.classList.add('wrong');
+                buttons[currentData.correct].classList.add('correct');
+                feedbackText.textContent = "❌ 答錯了！";
+                feedbackText.className = "font-medium text-lg mb-1 text-red-500";
+                feedbackArea.classList.add('border-red-500');
+                feedbackArea.classList.remove('border-green-500');
+            }
+
+            Array.from(buttons).forEach(btn => btn.disabled = true);
+            scoreDisplay.textContent = `得分: ${score}`;
+            explanationText.textContent = currentData.explanation;
+            feedbackArea.classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < quizData.length) {
+                loadQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            // Animation for score
+            let displayScore = 0;
+            const scoreInterval = setInterval(() => {
+                if (displayScore < score) {
+                    displayScore++;
+                    finalScore.textContent = displayScore;
+                } else {
+                    clearInterval(scoreInterval);
+                }
+            }, 20);
+            
+            finalScore.textContent = score;
+
+            // Feedback messages
+            if (score === 100) {
+                resultMessage.textContent = "太厲害了！你是冰河期專家！ 🏆";
+                resultIcon.innerHTML = "🌟";
+            } else if (score >= 80) {
+                resultMessage.textContent = "表現很棒！掌握了大部分知識！ 👏";
+                resultIcon.innerHTML = "😎";
+            } else if (score >= 60) {
+                resultMessage.textContent = "還不錯，再複習一下影片會更好！ 👍";
+                resultIcon.innerHTML = "📚";
+            } else {
+                resultMessage.textContent = "加油！再看一次影片來挑戰吧！ 💪";
+                resultIcon.innerHTML = "🌱";
+            }
+
+            // Send data to GAS
+            sendDataToGAS();
+        }
+
+        function sendDataToGAS() {
+            if (GAS_URL === '請在此貼上您的GAS網頁應用程式網址' || GAS_URL === '') {
+                uploadStatus.innerHTML = '<i class="fas fa-exclamation-triangle text-yellow-500 mr-2"></i> <span class="text-gray-600">未設定 GAS 網址，無法儲存成績。</span>';
+                return;
+            }
+
+            const data = {
+                timestamp: new Date().toISOString(),
+                class: studentInfo.class,
+                name: studentInfo.name,
+                no: studentInfo.no,
+                score: score
+            };
+
+            // Use 'no-cors' mode to send data without waiting for response (avoids CORS errors in simple setup)
+            // Or use text/plain content type to avoid preflight
+            fetch(GAS_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'text/plain;charset=utf-8',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                // Note: With GAS simple triggers and text/plain, we often get an opaque response
+                // but if it doesn't throw, it usually worked.
+                uploadStatus.innerHTML = '<i class="fas fa-check-circle text-green-500 mr-2"></i> <span class="text-green-600 font-bold">成績已成功儲存！</span>';
+                uploadStatus.classList.add('bg-green-50');
+                uploadStatus.classList.remove('bg-gray-100');
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                uploadStatus.innerHTML = '<i class="fas fa-times-circle text-red-500 mr-2"></i> <span class="text-red-600">儲存失敗，請檢查網路。</span>';
+                uploadStatus.classList.add('bg-red-50');
+                uploadStatus.classList.remove('bg-gray-100');
+            });
+        }
+
+        function resetQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            scoreDisplay.textContent = "得分: 0";
+            progressBar.style.width = "0%";
+            resultScreen.classList.add('hidden');
+            
+            // Reset to start screen to allow new user? Or just reset quiz for same user?
+            // Usually reload is cleaner for a new user, but here let's go back to start screen
+            inputClass.value = '';
+            inputName.value = '';
+            inputNo.value = '';
+            studentInfo = {};
+            uploadStatus.innerHTML = '<i class="fas fa-spinner fa-spin text-blue-500 mr-2"></i> <span class="text-gray-600">正在儲存成績至雲端...</span>'; // Reset status HTML
+            
+            startScreen.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
